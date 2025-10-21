@@ -45,6 +45,11 @@
 
 <img src="public/support_qr.jpg" width="50%" alt="赞赏码">
 
+
 ## 致谢
 
-本项目基于 [StudiD-IDEA](https://github.com/ZeroAd-06/StudiD-IDEA) 仓库进行了重构。我们对其原有的逻辑和提示词进行了优化，并将其改为在沙箱环境中运行，以提供更安全、更稳定的体验。在此特别感谢原作者的贡献。
+本项目基于 [StudiD-IDEA](https://github.com/ZeroAd-06/StudiD-IDEA) 的理念与代码框架进行了重构。
+在此基础上，我们优化了原有的逻辑与提示词，并新增了沙箱运行机制与 JSON 输出模式，以提升安全性与稳定性。
+衷心感谢原作者的开源工作与启发。
+
+本项目遵循与原项目相同的 **MIT License**，并在保留原版权声明的基础上进行了修改与扩展。
