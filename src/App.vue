@@ -18,6 +18,7 @@ const isSettingsModalVisible = ref(false);
 let iframe = null;
 let hadError = false;
 let securityIssue = false;
+let logs = [];
 let imaginedTerminal = [];
 let lastRunTime = 0;
 let recentRuns = [];
@@ -50,6 +51,7 @@ async function runCode() {
 
   appendToTerminal('>>> 正在编译您的代码...');
   hadError = false; // 重置错误状态
+  logs = []; // 重置日志
   imaginedTerminal = []; // 重置备用终端内容
 
   try {
@@ -118,6 +120,7 @@ window.addEventListener('message', (event) => {
   const { type, data } = event.data;
 
   if (type === 'log') {
+    logs.push(data);
     appendToTerminal(data);
     // 识别“安全阻断”信号（模型或沙箱返回的安全日志）
     if (typeof data === 'string' && /\b(Security|Blocked|拦截|阻止)\b/i.test(data)) {
@@ -127,7 +130,8 @@ window.addEventListener('message', (event) => {
     hadError = true;
     appendToTerminal(`[错误] ${data}`);
   } else if (type === 'end') {
-    if (hadError || securityIssue) {
+    const hasMeaningfulLog = logs.some(log => typeof log === 'string' && log.trim().length > 0);
+    if (hadError || securityIssue || !hasMeaningfulLog) {
       appendToTerminal('\n检测到运行不符合预期');
       appendToTerminal('执行优化编译');
       appendToTerminal('正在优化编译...');
