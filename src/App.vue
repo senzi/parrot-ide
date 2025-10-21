@@ -7,25 +7,18 @@ import { oneDark } from '@codemirror/theme-one-dark';
 const code = ref("pront('你好，鹦鹉！')");
 const terminalOutput = ref('>>> 欢迎来到鹦鹉IDE！');
 let iframe = null;
+let hadError = false;
+let imaginedTerminal = [];
 
 function appendToTerminal(line) {
   terminalOutput.value += `\n${line}`;
   // 可以在这里添加自动滚动逻辑
 }
 
-async function testHello() {
-  appendToTerminal('>>> 正在测试 /hello 端点...');
-  try {
-    const response = await fetch('/hello');
-    const data = await response.json();
-    appendToTerminal(`[Hello Response] ${JSON.stringify(data)}`);
-  } catch (error) {
-    appendToTerminal(`[Hello Error] ${error.message}`);
-  }
-}
-
 async function runCode() {
   appendToTerminal('>>> 正在编译您的代码...');
+  hadError = false; // 重置错误状态
+  imaginedTerminal = []; // 重置备用终端内容
 
   try {
     const response = await fetch('/compile', {
@@ -34,33 +27,37 @@ async function runCode() {
       body: JSON.stringify({ code: code.value }),
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP 错误! 状态: ${response.status}`);
+    }
+
     const data = await response.json();
 
     if (data.error) {
       appendToTerminal(`[编译错误] ${data.error}`);
-      return;
+      // 触发LLM调用失败的兜底逻辑
+      throw new Error(data.error);
     }
 
-    const compiledJs = data.compiled;
+    const compiledJs = data.compiled.code;
+    imaginedTerminal = data.compiled.imagined_terminal || [];
     appendToTerminal('>>> 编译成功，正在执行...');
     
-    // 移除旧的 iframe
     if (iframe) {
       iframe.remove();
     }
 
-    // 创建沙箱 iframe
     iframe = document.createElement('iframe');
     iframe.sandbox = 'allow-scripts';
     iframe.style.display = 'none';
     
-    // 设置 iframe 内容并执行代码
     iframe.srcdoc = `
       <script>
-        // 覆盖 console 方法以将消息发送回父窗口
         window.console.log = (...args) => parent.postMessage({ type: 'log', data: args.join(' ') }, '*');
         window.console.error = (...args) => parent.postMessage({ type: 'err', data: args.join(' ') }, '*');
-        window.addEventListener('error', e => parent.postMessage({ type: 'err', data: '运行时错误: ' + e.message }, '*'));
+        window.addEventListener('error', e => {
+          parent.postMessage({ type: 'err', data: '运行时错误: ' + e.message }, '*');
+        });
 
         try {
           ${compiledJs}
@@ -75,13 +72,15 @@ async function runCode() {
     document.body.appendChild(iframe);
 
   } catch (error) {
-    appendToTerminal(`[网络错误] ${error.message}`);
+    // LLM 调用失败或返回格式错误的兜底逻辑
+    appendToTerminal(`[编译错误] ${error.message}`);
+    appendToTerminal('>>> 模拟编译完成...');
+    appendToTerminal('[致命异常] 编译器核心无法响应，执行被中断。');
+    appendToTerminal('>>> 执行完毕。');
   }
 }
 
-// 监听来自 iframe 的消息
 window.addEventListener('message', (event) => {
-  // 增加对 iframe 存在性的检查，防止在 iframe 销毁后依然处理消息
   if (!iframe || event.source !== iframe.contentWindow) {
     return;
   }
@@ -90,8 +89,16 @@ window.addEventListener('message', (event) => {
   if (type === 'log') {
     appendToTerminal(data);
   } else if (type === 'err') {
+    hadError = true;
     appendToTerminal(`[错误] ${data}`);
   } else if (type === 'end') {
+    if (hadError) {
+      appendToTerminal('\n检测到运行不符合预期');
+      appendToTerminal('执行优化编译');
+      appendToTerminal('正在优化编译...');
+      appendToTerminal('执行：');
+      imaginedTerminal.forEach(line => appendToTerminal(line));
+    }
     appendToTerminal('>>> 执行完毕。');
     if (iframe) {
       iframe.remove();
@@ -99,7 +106,6 @@ window.addEventListener('message', (event) => {
     }
   }
 });
-
 
 function stopCode() {
   if (iframe) {
@@ -112,13 +118,11 @@ function stopCode() {
 }
 
 function openSettings() {
-  // 打开设置模态框的逻辑
   alert('设置功能待实现。');
 }
 
 const extensions = [javascript(), oneDark];
 
-// Codemirror EditorView instance ref
 const view = shallowRef();
 const handleReady = (payload) => {
   view.value = payload.view;
@@ -133,7 +137,6 @@ const handleReady = (payload) => {
         <button @click="runCode">运行 ▶</button>
         <button @click="stopCode">停止 ■</button>
         <button @click="openSettings">设置 ⚙️</button>
-        <button @click="testHello">测试 Hello</button>
       </div>
     </header>
     <main class="main-content">
@@ -169,14 +172,23 @@ body, html {
   padding: 0;
   height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg-color);
+  background-color: #282c34; /* 深灰色背景 */
   color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ide-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 80vh;
+  width: 80vw;
+  max-width: 1400px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  background-color: var(--bg-color);
 }
 
 .control-bar {

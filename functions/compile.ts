@@ -82,7 +82,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       model: "deepseek-chat",
       messages: [{ role: "system", content: finalPrompt }],
       response_format: { type: 'json_object' },
-      max_tokens: 2000, // 20000 is too large for many models, using a safer 2000
+      max_tokens: 5000,
     });
 
     const messageContent = completion.choices[0].message.content;
@@ -93,7 +93,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     const llmResponse = JSON.parse(messageContent);
     
-    return new Response(JSON.stringify({ compiled: llmResponse.code }), {
+    // 返回完整的 LLM 响应对象，而不仅仅是 code
+    return new Response(JSON.stringify({ compiled: llmResponse }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
