@@ -6,6 +6,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 
 const code = ref("pront('你好，鹦鹉！')");
 const terminalOutput = ref('>>> 欢迎来到鹦鹉IDE！');
+const isSettingsModalVisible = ref(false);
 let iframe = null;
 let hadError = false;
 let imaginedTerminal = [];
@@ -107,18 +108,12 @@ window.addEventListener('message', (event) => {
   }
 });
 
-function stopCode() {
-  if (iframe) {
-    iframe.remove();
-    iframe = null;
-    appendToTerminal('>>> 执行已由用户停止。');
-  } else {
-    appendToTerminal('>>> 当前没有正在执行的代码。');
-  }
+function openSettings() {
+  isSettingsModalVisible.value = true;
 }
 
-function openSettings() {
-  alert('设置功能待实现。');
+function closeSettingsModal() {
+  isSettingsModalVisible.value = false;
 }
 
 const extensions = [javascript(), oneDark];
@@ -135,7 +130,6 @@ const handleReady = (payload) => {
       <h1>Parrot IDE</h1>
       <div class="actions">
         <button @click="runCode">运行 ▶</button>
-        <button @click="stopCode">停止 ■</button>
         <button @click="openSettings">设置 ⚙️</button>
       </div>
     </header>
@@ -156,6 +150,14 @@ const handleReady = (payload) => {
         <pre class="terminal">{{ terminalOutput }}</pre>
       </div>
     </main>
+
+    <div v-if="isSettingsModalVisible" class="modal-overlay" @click.self="closeSettingsModal">
+      <div class="modal-content">
+        <p style="white-space: pre-wrap;">Parrot IDE 内置可能是目前最先进的编译器。
+所以没什么需要设置的</p>
+        <button @click="closeSettingsModal">朕知道了</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -243,11 +245,55 @@ body, html {
   border: none;
   outline: none;
   padding: 1rem;
-  font-family: 'Fira Code', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: break-word;
   overflow-y: auto;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #2d2d2d;
+  padding: 2rem 3rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.modal-content p {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.modal-content button {
+  padding: 0.6rem 1.5rem;
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.modal-content button:hover {
+  background-color: #7a82ff;
 }
 </style>

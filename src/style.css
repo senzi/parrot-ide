@@ -1,0 +1,13 @@
+@import url("https://fontsapi.zeoseven.com/292/main/result.css");
+
+:root {
+  --font-en: 'JetBrains Mono', monospace;
+  --font-zh: 'LXGW WenKai', sans-serif;
+}
+
+.cm-editor,
+pre,
+code {
+  font-family: var(--font-en), var(--font-zh) !important;
+  font-weight: normal;
+}
