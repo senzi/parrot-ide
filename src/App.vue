@@ -4,7 +4,14 @@ import { Codemirror } from 'vue-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
 
-const code = ref("pront('你好，鹦鹉！')");
+const code = ref(`functin main(){
+    pront("🦜 系统自检开始……")；
+    pront("🦜 正在尝试理解人类语言……");
+    base64 = "5qyi6L+O5YWz5rOodyBA6Zi/5bC85Lqa5piv5a6J5aau5Lqe";
+    print("我的理解是，", 中文(decode(base64)));
+}
+
+main()`);
 const terminalOutput = ref('>>> 欢迎来到鹦鹉IDE！');
 const isSettingsModalVisible = ref(false);
 let iframe = null;
