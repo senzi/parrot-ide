@@ -3,6 +3,7 @@ import { ref, shallowRef } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { EditorView } from '@codemirror/view';
 
 const code = ref(`functin main(){
     pront("🦜 系统自检开始……")；
@@ -152,7 +153,16 @@ function closeSettingsModal() {
   isSettingsModalVisible.value = false;
 }
 
-const extensions = [javascript(), oneDark];
+const myTheme = EditorView.theme({
+  '&': {
+    fontSize: '1.1em',
+  },
+  '.cm-content': {
+    fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+  }
+});
+
+const extensions = [javascript(), oneDark, EditorView.lineWrapping, myTheme];
 
 const view = shallowRef();
 const handleReady = (payload) => {
