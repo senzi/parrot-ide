@@ -13,11 +13,22 @@ function appendToTerminal(line) {
   // 可以在这里添加自动滚动逻辑
 }
 
+async function testHello() {
+  appendToTerminal('>>> 正在测试 /hello 端点...');
+  try {
+    const response = await fetch('/hello');
+    const data = await response.json();
+    appendToTerminal(`[Hello Response] ${JSON.stringify(data)}`);
+  } catch (error) {
+    appendToTerminal(`[Hello Error] ${error.message}`);
+  }
+}
+
 async function runCode() {
   appendToTerminal('>>> 正在编译您的代码...');
 
   try {
-    const response = await fetch('/functions/compile', {
+    const response = await fetch('/compile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: code.value }),
@@ -70,8 +81,10 @@ async function runCode() {
 
 // 监听来自 iframe 的消息
 window.addEventListener('message', (event) => {
-  // 简单的安全检查
-  if (event.source !== iframe.contentWindow) return;
+  // 增加对 iframe 存在性的检查，防止在 iframe 销毁后依然处理消息
+  if (!iframe || event.source !== iframe.contentWindow) {
+    return;
+  }
 
   const { type, data } = event.data;
   if (type === 'log') {
@@ -120,6 +133,7 @@ const handleReady = (payload) => {
         <button @click="runCode">运行 ▶</button>
         <button @click="stopCode">停止 ■</button>
         <button @click="openSettings">设置 ⚙️</button>
+        <button @click="testHello">测试 Hello</button>
       </div>
     </header>
     <main class="main-content">
