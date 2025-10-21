@@ -10,6 +10,8 @@ const isSettingsModalVisible = ref(false);
 let iframe = null;
 let hadError = false;
 let imaginedTerminal = [];
+let lastRunTime = 0;
+let recentRuns = [];
 
 function appendToTerminal(line) {
   terminalOutput.value += `\n${line}`;
@@ -17,6 +19,26 @@ function appendToTerminal(line) {
 }
 
 async function runCode() {
+  if (code.value.length > 1500) {
+    appendToTerminal('鹦鹉说：太长不看。');
+    return;
+  }
+
+  const now = Date.now();
+  if (now - lastRunTime < 5000) {
+    appendToTerminal('别急，鹦鹉还在喘气 🐦（5 秒冷却）');
+    return;
+  }
+
+  recentRuns = recentRuns.filter(t => now - t < 600000); // 10 minutes
+  if (recentRuns.length >= 10) {
+    appendToTerminal('你编译得太频繁啦，休息一下再玩～');
+    return;
+  }
+  
+  lastRunTime = now;
+  recentRuns.push(now);
+
   appendToTerminal('>>> 正在编译您的代码...');
   hadError = false; // 重置错误状态
   imaginedTerminal = []; // 重置备用终端内容
@@ -158,6 +180,10 @@ const handleReady = (payload) => {
         <button @click="closeSettingsModal">朕知道了</button>
       </div>
     </div>
+
+    <footer class="ide-footer">
+      © 2025 Parrot-IDE · <a href="https://github.com/senzi/parrot-ide/blob/main/LICENSE" target="_blank">MIT License</a> · <a href="https://github.com/senzi/parrot-ide" target="_blank">GitHub</a> · <a>VibeCoding</a>
+    </footer>
   </div>
 </template>
 
@@ -295,5 +321,51 @@ body, html {
 
 .modal-content button:hover {
   background-color: #7a82ff;
+}
+
+.ide-footer {
+  text-align: center;
+  padding: 0.5rem;
+  background-color: #252526;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.ide-footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.ide-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  body, html {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .ide-layout {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .main-content {
+    flex-direction: column;
+  }
+
+  .editor-pane, .terminal-pane {
+    width: 100%;
+    height: 50%;
+  }
+
+  .editor-pane {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
 }
 </style>

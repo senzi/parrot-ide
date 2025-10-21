@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Parrot Favicon">
+  <defs>
+    <style>
+      /* 尝试优先使用彩色表情字体，回退系统字体 */
+      text { font: 44px/1 "Twemoji Mozilla","Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji","EmojiOne Color","Segoe UI Symbol",sans-serif; }
+    </style>
+  </defs>
+  <!-- 纯色圆形背景：可按需替换 fill 颜色 -->
+  <circle cx="32" cy="32" r="30" fill="#16a34a"/>
+  <!-- 居中放置鹦鹉 Emoji -->
+  <text x="32" y="40" text-anchor="middle">🦜</text>
+</svg>
