@@ -9,6 +9,7 @@ const terminalOutput = ref('>>> 欢迎来到鹦鹉IDE！');
 const isSettingsModalVisible = ref(false);
 let iframe = null;
 let hadError = false;
+let securityIssue = false;
 let imaginedTerminal = [];
 let lastRunTime = 0;
 let recentRuns = [];
@@ -104,29 +105,35 @@ async function runCode() {
 }
 
 window.addEventListener('message', (event) => {
-  if (!iframe || event.source !== iframe.contentWindow) {
-    return;
-  }
+  if (!iframe || event.source !== iframe.contentWindow) return;
 
   const { type, data } = event.data;
+
   if (type === 'log') {
     appendToTerminal(data);
+    // 识别“安全阻断”信号（模型或沙箱返回的安全日志）
+    if (typeof data === 'string' && /\b(Security|Blocked|拦截|阻止)\b/i.test(data)) {
+      securityIssue = true;
+    }
   } else if (type === 'err') {
     hadError = true;
     appendToTerminal(`[错误] ${data}`);
   } else if (type === 'end') {
-    if (hadError) {
+    if (hadError || securityIssue) {
       appendToTerminal('\n检测到运行不符合预期');
       appendToTerminal('执行优化编译');
       appendToTerminal('正在优化编译...');
       appendToTerminal('执行：');
-      imaginedTerminal.forEach(line => appendToTerminal(line));
+      (imaginedTerminal || []).forEach(line => appendToTerminal(line));
     }
     appendToTerminal('>>> 执行完毕。');
     if (iframe) {
       iframe.remove();
       iframe = null;
     }
+    // 重置标志（可选）
+    hadError = false;
+    securityIssue = false;
   }
 });
 
@@ -175,8 +182,10 @@ const handleReady = (payload) => {
 
     <div v-if="isSettingsModalVisible" class="modal-overlay" @click.self="closeSettingsModal">
       <div class="modal-content">
-        <p style="white-space: pre-wrap;">Parrot IDE 内置可能是目前最先进的编译器。
-所以没什么需要设置的</p>
+        <p style="white-space: pre-wrap;">
+        Parrot IDE 内置可能是目前最先进的编译器。<br>
+        所以没什么需要设置的。
+        </p>
         <button @click="closeSettingsModal">朕知道了</button>
       </div>
     </div>
