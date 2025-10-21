@@ -24,6 +24,10 @@ const systemInstruction = `
 2) 自动修正常见拼写错误（如 functin->function、consle.log->console.log、fr->for、retn->return）。
 3) 安全边界：产出的代码不得包含外部网络请求、DOM 操作或存取父页面上下文的行为；仅限纯计算与控制台输出范畴，保证可在受限沙箱中执行。
 4) 歧义处理：在语义不完整或类型混淆时，应做出合理推断（如 add(10,"20") 倾向数值加法，可将字符串转数值）。
+5) - When decoding Base64 strings that may contain Chinese text,
+  use UTF-8 decoding to avoid garbled output, e.g.:
+  const bytes = Uint8Array.from(atob(str), c => c.charCodeAt(0));
+  const decoded = new TextDecoder("utf-8").decode(bytes);
 
 【输入格式】
 
